@@ -164,7 +164,7 @@ def rank_matches_videoq(query_video_path, video_paths, model, vis_processor):
         print(video_path, dists.cpu().detach().numpy().item())
 
 if __name__ == '__main__':
-    eval_config = 'eval_configs/video_llama_eval_only_vl_askyoutube_instruct_ft_clip.yaml'
+    eval_config = 'eval_configs/video_clip.yaml'
 
     gpu_id = 0
     args = {'cfg_path': eval_config, 'gpu_id': gpu_id,
@@ -172,9 +172,7 @@ if __name__ == '__main__':
     args = Namespace(**args)
     model, vis_processor = init(args)
 
-    video_paths = glob.glob('/mnt/g/video_caption_dataset/education/national_geographic/data/chunked_videos_30s/*/*.mp4')#[-150:-50]
+    video_paths = glob.glob('data/*.mp4')
 
-    prompt = 'snake'
+    prompt = 'zebra'
     rank_matches([prompt], video_paths, model, vis_processor)
-    #rank_matches_videoq(video_paths[-119], video_paths, model, vis_processor)
-
