@@ -1,0 +1,12 @@
+torch
+torchvision
+torchaudio
+transformers
+omegaconf
+iopath
+timm
+decord
+webdataset
+einops
+pandas
+opencv-python
