@@ -13,7 +13,7 @@
 | Checkpoint       | Link |
 |:------------|-------------|
 | AskVideos-VideoCLIP-v0.1    | [link](https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.1) |
-
+| AskVideos-VideoCLIP-v0.2    | [link](https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.2) |
 
 ## Introduction
 
@@ -44,7 +44,12 @@ pip3 install -r requirements.txt
 ```
 python video_clip.py
 ```
-The demo is also available to run on [colab](https://colab.research.google.com/drive/1kVzoQUS3phupujY-8Bym0nHezRRyd0YQ).
+The demo is also available to run on colab.
+| Model       | Colab link |
+|:------------|-------------|
+| AskVideos-VideoCLIP-v0.1    | [link]([https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.1](https://colab.research.google.com/drive/1kVzoQUS3phupujY-8Bym0nHezRRyd0YQ)) |
+| AskVideos-VideoCLIP-v0.2    | [link]([https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.2](https://colab.research.google.com/drive/1TfEIqzEq_ppVSQHfEHXvbIrh0MTn9vpX?usp=sharing)) |
+
 ## Term of Use
 AskVideos code and models are distributed under the Apache 2.0 license.
 
