@@ -4,6 +4,7 @@ model:
   ckpt: './models/askvideos_clip_v0.2.pth'
   max_frame_pos: 32
   clip_dim_size: 1024
+  num_vq_hidden_layers: 4
 
 
 datasets:

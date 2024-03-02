@@ -54,6 +54,7 @@ class VideoLLAMA(Blip2Base):
         max_frame_pos= 32,
         num_video_query_token = 32,
         clip_dim_size = 256,
+        num_vq_hidden_layers = 2,
     ):
         super().__init__()
 
@@ -95,8 +96,9 @@ class VideoLLAMA(Blip2Base):
         self.video_frame_position_embedding = nn.Embedding(max_frame_pos, self.Qformer.config.hidden_size)
 
         self.num_video_query_token = num_video_query_token
+        self.num_vq_hidden_layers = num_vq_hidden_layers
         self.video_Qformer,self.video_query_tokens = self.init_video_Qformer(num_query_token = num_video_query_token,\
-            vision_width=self.Qformer.config.hidden_size, num_hidden_layers =2)
+            vision_width=self.Qformer.config.hidden_size, num_hidden_layers = self.config.num_vq_hidden_layers)
 
 
         for name, param in self.video_Qformer.named_parameters():
@@ -184,6 +186,7 @@ class VideoLLAMA(Blip2Base):
         num_video_query_token =  cfg.get("num_video_query_token", 32)
 
         clip_dim_size = cfg.get("clip_dim_size", 256)
+        num_vq_hidden_layers = cfg.get('num_vq_hidden_layers', 2)
 
         model = cls(
             vit_model=vit_model,
@@ -195,6 +198,7 @@ class VideoLLAMA(Blip2Base):
             max_frame_pos=max_frame_pos,
             num_video_query_token=num_video_query_token,
             clip_dim_size = clip_dim_size,
+            num_vq_hidden_layers = num_vq_hidden_layers,
         )
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
