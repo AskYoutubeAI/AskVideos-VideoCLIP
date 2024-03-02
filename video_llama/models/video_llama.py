@@ -98,7 +98,7 @@ class VideoLLAMA(Blip2Base):
         self.num_video_query_token = num_video_query_token
         self.num_vq_hidden_layers = num_vq_hidden_layers
         self.video_Qformer,self.video_query_tokens = self.init_video_Qformer(num_query_token = num_video_query_token,\
-            vision_width=self.Qformer.config.hidden_size, num_hidden_layers = self.config.num_vq_hidden_layers)
+            vision_width=self.Qformer.config.hidden_size, num_hidden_layers = self.num_vq_hidden_layers)
 
 
         for name, param in self.video_Qformer.named_parameters():
