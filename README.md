@@ -60,3 +60,14 @@ AskVideos code and models are distributed under the Apache 2.0 license.
 
 ## Acknowledgement
 This model is inspired by the [Video-LLaMA](https://github.com/DAMO-NLP-SG/Video-LLaMA) Video-Qformer model.
+
+## Citation
+```
+bibtex
+@misc{askvideos2024videoclip,
+  title        = {AskVideos-VideoCLIP: Language-grounded video embeddings},
+  author       = {AskVideos},
+  year         = {2024},
+  howpublished = {GitHub},
+  url          = {https://github.com/AskYoutubeAI/AskVideos-VideoCLIP}
+}
