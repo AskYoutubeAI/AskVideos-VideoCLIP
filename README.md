@@ -55,6 +55,11 @@ The demo is also available to run on colab.
 | AskVideos-VideoCLIP-v0.1    | [link](https://colab.research.google.com/drive/1kVzoQUS3phupujY-8Bym0nHezRRyd0YQ) |
 | AskVideos-VideoCLIP-v0.2    | [link](https://colab.research.google.com/drive/1TfEIqzEq_ppVSQHfEHXvbIrh0MTn9vpX?usp=sharing) |
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=AskYoutubeAI/AskVideos-VideoCLIP&type=Date)](https://star-history.com/#AskYoutubeAI/AskVideos-VideoCLIP&Date)
+
+
 ## Term of Use
 AskVideos code and models are distributed under the Apache 2.0 license.
 
