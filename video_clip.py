@@ -164,7 +164,7 @@ def rank_matches_videoq(query_video_path, video_paths, model, vis_processor):
         print(video_path, dists.cpu().detach().numpy().item())
 
 if __name__ == '__main__':
-    eval_config = 'eval_configs/video_clip.yaml'
+    eval_config = 'eval_configs/video_clip_v0.2.yaml'
 
     gpu_id = 0
     args = {'cfg_path': eval_config, 'gpu_id': gpu_id,
