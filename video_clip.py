@@ -8,14 +8,16 @@ from video_llama.common.config import Config
 from video_llama.common.registry import registry
 from video_llama.processors.video_processor import load_video
 
-DEVICE = 'cuda'
+DEVICE = 'cpu'
 
 def init(args):
     cfg = Config(args)
     model_config = cfg.model_cfg
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
-    model = model_cls.from_config(model_config).to(f'cuda:{args.gpu_id}')
+    model = model_cls.from_config(model_config)
+    if DEVICE == 'cuda':
+        model = model.to(f'DEVICE:{args.gpu_id}')
     model.eval()
     vis_processor_cfg = cfg.datasets_cfg.webvid.vis_processor.train
     vis_processor = registry.get_processor_class(
@@ -32,8 +34,9 @@ def load_model(eval_config):
     model_config = cfg.model_cfg
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
-    model = model_cls.from_config(model_config).to(
-        'cuda:{}'.format(args.gpu_id))
+    model = model_cls.from_config(model_config)
+    if DEVICE == 'cuda':
+        model = model.to(f'cuda:{args.gpu_id}')
     model.eval()
 
     vis_processor_cfg = cfg.datasets_cfg.webvid.vis_processor.train
@@ -72,7 +75,9 @@ def embed_text_itc(model, prompt):
             padding='max_length',
             truncation=True,
             max_length=320,
-            return_tensors='pt').to('cuda')
+            return_tensors='pt')
+    if DEVICE == 'cuda':
+        inputs = inputs.to(DEVICE)
     embds = model.video_Qformer.bert(
             inputs.input_ids,
             inputs.attention_mask,
@@ -95,7 +100,9 @@ def embed_text_itm(model, prompt, video_emb):
             padding='max_length',
             truncation=True,
             max_length=320,
-            return_tensors='pt').to('cuda')
+            return_tensors='pt')
+    if DEVICE == 'cuda':
+        inputs = inputs.to(DEVICE)
 
     query_tokens = model.video_query_tokens.expand(video_emb.shape[0], -1, -1)
     query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(video_emb.device)
@@ -164,7 +171,7 @@ def rank_matches_videoq(query_video_path, video_paths, model, vis_processor):
         print(video_path, dists.cpu().detach().numpy().item())
 
 if __name__ == '__main__':
-    eval_config = 'eval_configs/video_clip.yaml'
+    eval_config = 'eval_configs/video_clip_v0.2.yaml'
 
     gpu_id = 0
     args = {'cfg_path': eval_config, 'gpu_id': gpu_id,
