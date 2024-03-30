@@ -17,7 +17,7 @@ def init(args):
     model_cls = registry.get_model_class(model_config.arch)
     model = model_cls.from_config(model_config)
     if DEVICE == 'cuda':
-        model = model.to(f'DEVICE:{args.gpu_id}')
+        model = model.to(f'cuda:{args.gpu_id}')
     model.eval()
     vis_processor_cfg = cfg.datasets_cfg.webvid.vis_processor.train
     vis_processor = registry.get_processor_class(
