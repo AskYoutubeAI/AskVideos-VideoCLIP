@@ -8,7 +8,7 @@ from video_llama.common.config import Config
 from video_llama.common.registry import registry
 from video_llama.processors.video_processor import load_video
 
-DEVICE = 'cpu'
+DEVICE = 'cuda'
 
 def init(args):
     cfg = Config(args)
