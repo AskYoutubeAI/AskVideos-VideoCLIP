@@ -28,7 +28,7 @@ class VideoLLAMA(Blip2Base):
     }
 
     @classmethod
-    def init_video_Qformer(cls, num_query_token, vision_width,num_hidden_layers =2):
+    def init_video_Qformer(cls, num_query_token, vision_width, num_hidden_layers=4):
         encoder_config = BertConfig.from_pretrained("bert-base-uncased")
         encoder_config.num_hidden_layers = num_hidden_layers
         encoder_config.encoder_width = vision_width
@@ -54,7 +54,7 @@ class VideoLLAMA(Blip2Base):
         max_frame_pos= 32,
         num_video_query_token = 32,
         clip_dim_size = 256,
-        num_vq_hidden_layers = 2,
+        num_videoq_hidden_layers = 4,
     ):
         super().__init__()
 
@@ -96,9 +96,9 @@ class VideoLLAMA(Blip2Base):
         self.video_frame_position_embedding = nn.Embedding(max_frame_pos, self.Qformer.config.hidden_size)
 
         self.num_video_query_token = num_video_query_token
-        self.num_vq_hidden_layers = num_vq_hidden_layers
+        self.num_videoq_hidden_layers = num_videoq_hidden_layers
         self.video_Qformer,self.video_query_tokens = self.init_video_Qformer(num_query_token = num_video_query_token,\
-            vision_width=self.Qformer.config.hidden_size, num_hidden_layers = self.num_vq_hidden_layers)
+            vision_width=self.Qformer.config.hidden_size, num_hidden_layers = self.num_videoq_hidden_layers)
 
 
         for name, param in self.video_Qformer.named_parameters():
@@ -126,7 +126,7 @@ class VideoLLAMA(Blip2Base):
         self.visual_encoder.to("cpu")
         self.visual_encoder.float()
 
-    def encode_videoQformer_visual(self, image):
+    def encode_videoQformer_visual(self, image, output_for_itm=False, output_for_itg=False):
         device = image.device
         
         # input shape b,c,t,h,w
@@ -160,13 +160,19 @@ class VideoLLAMA(Blip2Base):
             frame_atts = torch.ones(frame_hidden_state.size()[:-1], dtype=torch.long).to(device)
             video_query_tokens = self.video_query_tokens.expand(frame_hidden_state.shape[0], -1, -1)
 
+            if output_for_itm:
+                return video_query_tokens, frame_hidden_state, frame_atts
+
             video_query_output = self.video_Qformer.bert(
                 query_embeds=video_query_tokens,
                 encoder_hidden_states=frame_hidden_state,
                 encoder_attention_mask=frame_atts,
+                #output_attentions=True,
                 use_cache=True,
                 return_dict=True,
                 )
+            if output_for_itg:
+                return video_query_tokens, video_query_output.past_key_values, frame_atts
             return video_query_tokens, video_query_output
     
     def forward(self, samples):
@@ -186,7 +192,7 @@ class VideoLLAMA(Blip2Base):
         num_video_query_token =  cfg.get("num_video_query_token", 32)
 
         clip_dim_size = cfg.get("clip_dim_size", 256)
-        num_vq_hidden_layers = cfg.get('num_vq_hidden_layers', 2)
+        num_videoq_hidden_layers = cfg.get("num_videoq_hidden_layers", 4)
 
         model = cls(
             vit_model=vit_model,
@@ -198,7 +204,7 @@ class VideoLLAMA(Blip2Base):
             max_frame_pos=max_frame_pos,
             num_video_query_token=num_video_query_token,
             clip_dim_size = clip_dim_size,
-            num_vq_hidden_layers = num_vq_hidden_layers,
+            num_videoq_hidden_layers = num_videoq_hidden_layers,
         )
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4

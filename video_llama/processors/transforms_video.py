@@ -16,12 +16,14 @@ from torchvision.transforms import (
 )
 
 import video_llama.processors.functional_video as F
+import torchvision
 
 
 __all__ = [
     "RandomCropVideo",
     "RandomResizedCropVideo",
     "CenterCropVideo",
+    "ResizedCenterCropVideo",
     "NormalizeVideo",
     "ToTensorVideo",
     "RandomHorizontalFlipVideo",
@@ -84,6 +86,43 @@ class RandomResizedCropVideo(RandomResizedCrop):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size}, interpolation_mode={self.interpolation_mode}, scale={self.scale}, ratio={self.ratio})"
+
+class ResizedCenterCropVideo:
+    def __init__(
+        self,
+        size,
+        interpolation_mode="bilinear",
+    ):
+        if isinstance(size, tuple):
+            if len(size) != 2:
+                raise ValueError(
+                    f"size should be tuple (height, width), instead got {size}"
+                )
+            self.size = size
+        else:
+            self.size = (size, size)
+
+        self.interpolation_mode = interpolation_mode
+        #self.scale = scale
+        #self.ratio = ratio
+
+    def __call__(self, clip):
+        """
+        Args:
+            clip (torch.tensor): Video clip to be cropped. Size is (C, T, H, W)
+        Returns:
+            torch.tensor: randomly cropped/resized video clip.
+                size is (C, T, H, W)
+        """
+        #i, j, h, w = self.get_params(clip, self.scale, self.ratio)
+        # TODO: Resize smallest side.
+        resize = torchvision.transforms.Resize(size=self.size[0])
+        resized_clip = resize(clip)#, self.size[0], interpolation_mode=self.interpolation_mode)
+        return F.center_crop(resized_clip, self.size)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(size={self.size}, interpolation_mode={self.interpolation_mode}"
+
 
 
 class CenterCropVideo:
