@@ -221,6 +221,15 @@ def upload_image(model, image_path, vis_processor):
     return image_emb
 
 
+def get_all_video_embeddings_itm(video_paths, prompt, model, vis_processor):
+    video_embs = []
+    for video_path in video_paths:
+        embs = upload_video_itm(
+            model, prompt, video_path, vis_processor)
+        #embs = F.normalize(model.vision_proj(embs), dim=-1)
+        video_embs.append(embs)
+    return video_embs
+
 
 def get_all_video_embeddings(video_paths, model, vis_processor):
     video_embs = []
