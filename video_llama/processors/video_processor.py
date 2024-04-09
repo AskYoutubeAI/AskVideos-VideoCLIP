@@ -17,14 +17,18 @@ from video_llama.processors import functional_video as F
 from omegaconf import OmegaConf
 from torchvision import transforms
 import random as rnd
+import math
 
 
 MAX_INT = registry.get("MAX_INT")
 decord.bridge.set_bridge("torch")
 
-def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, sampling="uniform", return_msg = False):
+def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, sampling="uniform", return_msg = False):
     decord.bridge.set_bridge("torch")
-    vr = VideoReader(uri=video_path, height=height, width=width)
+    if shortest_side is not None:
+        vr = VideoReader(uri=video_path, width=shortest_side)
+    else:
+        vr = VideoReader(uri=video_path, height=height, width=width)
 
     vlen = len(vr)
     start, end = 0, vlen
@@ -42,7 +46,6 @@ def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, sampling="unifor
 
     # get_batch -> T, H, W, C
     temp_frms = vr.get_batch(indices)
-    # print(type(temp_frms))
     tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
     frms = tensor_frms.permute(3, 0, 1, 2).float()  # (C, T, H, W)
 
@@ -54,6 +57,95 @@ def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, sampling="unifor
     # " " should be added in the start and end
     msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
     return frms, msg
+
+def split_clip(vlen, frame_rate, clip_len, n_frms):
+    total_duration = vlen / frame_rate # Total duration in seconds
+    num_clips = math.ceil(total_duration / clip_len)
+    frames_per_clip = int(math.ceil(frame_rate * clip_len))
+
+    all_clips = []
+    for i in range(num_clips):
+        start_frame = min(i * frames_per_clip, vlen)
+        end_frame = min((i + 1) * frames_per_clip, vlen)
+        frames_in_clip = range(start_frame, end_frame)
+        if len(frames_in_clip) == 0:
+            continue
+        elif len(frames_in_clip) < n_frms:
+            all_clips.append(frames_in_clip)
+        else:
+            # Sample n_frms.
+            sampled_frames_per_clip = np.arange(start_frame, end_frame, len(frames_in_clip) / n_frms).astype(int).tolist()
+            all_clips.append(sampled_frames_per_clip)
+    return all_clips
+
+
+def load_video_long(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, clip_len=10, sampling="uniform", return_msg = False):
+    decord.bridge.set_bridge("torch")
+    if shortest_side is not None:
+        vr = VideoReader(uri=video_path, width=shortest_side)
+    else:
+        vr = VideoReader(uri=video_path, height=height, width=width)
+
+    vlen = len(vr)
+    frame_rate = vr.get_avg_fps()
+    n_frms = min(n_frms, vlen)
+
+    all_clips_idxs = split_clip(vlen, frame_rate, clip_len, n_frms)
+    all_frms = []
+
+    for indices in all_clips_idxs:
+        # get_batch -> T, H, W, C
+        temp_frms = vr.get_batch(indices)
+
+        tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+        frms = tensor_frms.permute(3, 0, 1, 2).float()  # (C, T, H, W)\
+        all_frms.append(frms)
+
+    if not return_msg:
+        return all_frms
+    return all_frms, ''
+    fps = float(vr.get_avg_fps())
+    sec = ", ".join([str(round(f / fps, 1)) for f in indices])
+    # " " should be added in the start and end
+    msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
+    return frms, msg
+
+
+def load_video_long_subset(video_path, subsets, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, clip_len=10, orig_clip_len=30, sampling="uniform", return_msg = False):
+    decord.bridge.set_bridge("torch")
+    if shortest_side is not None:
+        vr = VideoReader(uri=video_path, width=shortest_side)
+    else:
+        vr = VideoReader(uri=video_path, height=height, width=width)
+
+    vlen = len(vr)
+    frame_rate = vr.get_avg_fps()
+    n_frms = min(n_frms, vlen)
+
+    # Just compute new_clip_len, then expand indices.
+    all_clips_idxs = split_clip(vlen, frame_rate, clip_len, n_frms)
+ 
+    all_clips_idxs_subsets = []
+    for (start, end) in subsets:
+        if start >= len(all_clips_idxs) or end >= len(all_clips_idxs):
+            print('Error: ', start, end, len(all_clips_idxs))
+        idxs_list = all_clips_idxs[start: end]
+        # Split idxs into clip_len.
+        all_clips_idxs_subsets.extend(idxs_list)
+
+    print(len(all_clips_idxs_subsets), all_clips_idxs_subsets)
+    all_frms = []
+    for indices in all_clips_idxs_subsets:
+        # get_batch -> T, H, W, C
+        temp_frms = vr.get_batch(indices)
+
+        tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+        frms = tensor_frms.permute(3, 0, 1, 2).float()  # (C, T, H, W)
+        all_frms.append(frms)
+
+    if not return_msg:
+        return all_frms
+    return all_frms, ''
 
 def load_video_all_frames(video_path, frame_sep=4, height=-1, width=-1, return_msg = False):
     decord.bridge.set_bridge("torch")
@@ -81,7 +173,6 @@ def load_video_all_frames(video_path, frame_sep=4, height=-1, width=-1, return_m
     # " " should be added in the start and end
     msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
     return frms, msg
-
 
 class AlproVideoBaseProcessor(BaseProcessor):
     def __init__(self, mean=None, std=None, n_frms=MAX_INT):
@@ -262,3 +353,65 @@ class AlproVideoEvalProcessor(AlproVideoBaseProcessor):
         n_frms = cfg.get("n_frms", MAX_INT)
 
         return cls(image_size=image_size, mean=mean, std=std, n_frms=n_frms)
+
+
+@registry.register_processor("resize_centercrop_video_train")
+class ResizeCenterCropVideoTrainProcessor(AlproVideoBaseProcessor):
+    def __init__(
+        self,
+        image_size=384,
+        mean=None,
+        std=None,
+        n_frms=MAX_INT,
+    ):
+        super().__init__(mean=mean, std=std, n_frms=n_frms)
+
+        self.image_size = image_size
+
+        self.transform = transforms.Compose(
+            [
+                # Video size is (C, T, H, W)
+                transforms_video.ResizedCenterCropVideo(
+                    (image_size, image_size)
+                ),
+                ToTHWC(),  # C, T, H, W -> T, H, W, C
+                ToUint8(),
+                transforms_video.ToTensorVideo(),  # T, H, W, C -> C, T, H, W
+                self.normalize,
+            ]
+        )
+
+    def __call__(self, vpath):
+        """
+        Args:
+            clip (torch.tensor): Video clip to be cropped. Size is (C, T, H, W)
+        Returns:
+            torch.tensor: video clip after transforms. Size is (C, T, size, size).
+        """
+        clip = load_video(
+            video_path=vpath,
+            n_frms=self.n_frms,
+            shortest_side=self.image_size,
+            #sampling="headtail",
+        )
+
+        return self.transform(clip)
+
+    @classmethod
+    def from_config(cls, cfg=None):
+        if cfg is None:
+            cfg = OmegaConf.create()
+
+        image_size = cfg.get("image_size", 256)
+
+        mean = cfg.get("mean", None)
+        std = cfg.get("std", None)
+
+        n_frms = cfg.get("n_frms", MAX_INT)
+
+        return cls(
+            image_size=image_size,
+            mean=mean,
+            std=std,
+            n_frms=n_frms,
+        )
