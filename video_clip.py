@@ -47,8 +47,8 @@ def load_model(eval_config):
     return model, vis_processor
 
 def upload_video(model, video_path, vis_processor):
-    if not isinstance(video_path, str):
-        raise NotImplementedError("Non-string video paths are not implemented.")
+    if not isinstance(video_path, str) and not isinstance(video_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
 
     video = load_video(
         video_path=video_path,
@@ -64,8 +64,8 @@ def upload_video(model, video_path, vis_processor):
 
 
 def upload_video_long_itg(model, prompt, video_path, vis_processor, clip_len=10):
-    if not isinstance(video_path, str):
-        raise NotImplementedError("Non-string video paths are not implemented.")
+    if not isinstance(video_path, str) and not isinstance(video_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
 
     clips = load_video_long(
         video_path=video_path,
@@ -91,8 +91,8 @@ def upload_video_long_itg(model, prompt, video_path, vis_processor, clip_len=10)
     return all_clips
 
 def upload_video_itm(model, prompt, video_path, vis_processor):
-    if not isinstance(video_path, str):
-        raise NotImplementedError("Non-string video paths are not implemented.")
+    if not isinstance(video_path, str) and not isinstance(video_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
 
     video = load_video(
         video_path=video_path,
@@ -112,8 +112,8 @@ def upload_video_itm(model, prompt, video_path, vis_processor):
 
 
 def upload_video_long_itm(model, prompt, video_path, vis_processor, clip_len=10):
-    if not isinstance(video_path, str):
-        raise NotImplementedError("Non-string video paths are not implemented.")
+    if not isinstance(video_path, str) and not isinstance(video_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
 
     clips = load_video_long(
         video_path=video_path,
@@ -138,8 +138,8 @@ def upload_video_long_itm(model, prompt, video_path, vis_processor, clip_len=10)
     return all_clips
 
 def upload_video_long(model, video_path, vis_processor, clip_len=10):
-    if not isinstance(video_path, str):
-        raise NotImplementedError("Non-string video paths are not implemented.")
+    if not isinstance(video_path, str) and not isinstance(video_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
 
     clips = load_video_long(
         video_path=video_path,
@@ -161,8 +161,8 @@ def upload_video_long(model, video_path, vis_processor, clip_len=10):
     return all_clips
 
 def upload_video_long_subsets(model, video_path, vis_processor, subsets, orig_clip_len, clip_len=10):
-    if not isinstance(video_path, str):
-        raise NotImplementedError("Non-string video paths are not implemented.")
+    if not isinstance(video_path, str) and not isinstance(video_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
 
     clips = load_video_long_subset(
         video_path,
@@ -186,8 +186,8 @@ def upload_video_long_subsets(model, video_path, vis_processor, subsets, orig_cl
     return all_clips
 
 def upload_image_itg(model, prompt, image_path, vis_processor):
-    if not isinstance(image_path, str):
-        raise NotImplementedError("Non-string image paths are not implemented.")
+    if not isinstance(image_path, str) and not isinstance(image_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes image paths are not implemented.")
     
     raw_image = Image.open(image_path).convert('RGB')
     image = vis_processor(raw_image).unsqueeze(0).unsqueeze(2).to(DEVICE)
@@ -198,8 +198,8 @@ def upload_image_itg(model, prompt, image_path, vis_processor):
     return image_emb
 
 def upload_image_itm(model, prompt, image_path, vis_processor):
-    if not isinstance(image_path, str):
-        raise NotImplementedError("Non-string image paths are not implemented.")
+    if not isinstance(image_path, str) and not isinstance(image_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes image paths are not implemented.")
     
     raw_image = Image.open(image_path).convert('RGB')
     image = vis_processor(raw_image).unsqueeze(0).unsqueeze(2).to(DEVICE)
@@ -211,8 +211,8 @@ def upload_image_itm(model, prompt, image_path, vis_processor):
 
 
 def upload_image(model, image_path, vis_processor):
-    if not isinstance(image_path, str):
-        raise NotImplementedError("Non-string image paths are not implemented.")
+    if not isinstance(image_path, str) and not isinstance(image_path, bytes):
+        raise NotImplementedError("Non-string or non-bytes image paths are not implemented.")
     
     raw_image = Image.open(image_path).convert('RGB')
     image = vis_processor(raw_image).unsqueeze(0).unsqueeze(2).to(DEVICE)
