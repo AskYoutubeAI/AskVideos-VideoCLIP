@@ -79,6 +79,50 @@ def split_clip(vlen, frame_rate, clip_len, n_frms):
     return all_clips
 
 
+def load_video_start_end(video_path, n_frms=np.iinfo(np.int32).max, height=-1, width=-1, shortest_side=None, start_seconds=-1, end_seconds=-1, sampling="uniform", return_msg=False):
+    decord.bridge.set_bridge("torch")
+    if shortest_side is not None:
+        vr = VideoReader(uri=video_path, width=shortest_side)
+    else:
+        vr = VideoReader(uri=video_path, height=height, width=width)
+
+    vlen = len(vr)
+    fps = vr.get_avg_fps()
+
+    # Calculate start and end frames based on seconds
+    start = 0 if start_seconds < 0 else int(start_seconds * fps)
+    end = vlen if end_seconds < 0 else int(end_seconds * fps)
+
+    # Ensure start and end are within bounds
+    start = max(0, start)
+    end = min(vlen, end)
+    print(f'load_video_start_end: {start} {end}')
+
+    # Adjust n_frms to be within the specified range
+    n_frms = min(n_frms, end - start)
+
+    if sampling == "uniform":
+        indices = np.linspace(start, end, n_frms, endpoint=False).astype(int).tolist()
+    elif sampling == "headtail":
+        half_n_frms = n_frms // 2
+        indices_h = sorted(np.random.choice(range(start, start + (end - start) // 2), half_n_frms, replace=False))
+        indices_t = sorted(np.random.choice(range(start + (end - start) // 2, end), half_n_frms, replace=False))
+        indices = indices_h + indices_t
+    else:
+        raise NotImplementedError
+
+    # Get frames
+    temp_frms = vr.get_batch(indices)
+    tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+    frms = tensor_frms.permute(3, 0, 1, 2).float()  # (C, T, H, W)
+
+    if not return_msg:
+        return frms
+
+    sec = ", ".join([str(round(f / fps, 1)) for f in indices])
+    msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
+    return frms, msg
+
 def load_video_long(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, clip_len=10, sampling="uniform", return_msg = False):
     decord.bridge.set_bridge("torch")
     if shortest_side is not None:

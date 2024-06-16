@@ -8,7 +8,7 @@ from PIL import Image
 
 from video_llama.common.config import Config
 from video_llama.common.registry import registry
-from video_llama.processors.video_processor import load_video, load_video_long, load_video_long_subset
+from video_llama.processors.video_processor import load_video, load_video_long, load_video_long_subset, load_video_start_end
 from video_llama.processors import Blip2ImageEvalProcessor
 
 DEVICE = 'cuda'
@@ -137,6 +137,28 @@ def upload_video_long_itm(model, prompt, video_path, vis_processor, clip_len=10)
 
     return all_clips
 
+def upload_video_start_end(model, video_path, vis_processor, start_seconds, end_seconds):
+    #if not isinstance(video_path, str):
+    #    raise NotImplementedError("Non-string video paths are not implemented.")
+    print(f'upload_video_start_end: {start_seconds} {end_seconds}')
+
+    clip = load_video_start_end(
+        video_path=video_path,
+        n_frms=16,
+        #n_frms=8,
+        height=224,
+        width=224,
+        start_seconds=start_seconds,
+        end_seconds=end_seconds,
+        sampling="uniform", return_msg=False
+    )
+
+    clip = vis_processor.transform(clip).unsqueeze(0).to(DEVICE)
+    clip = model.encode_videoQformer_visual(clip)[-1].last_hidden_state
+    clip = F.normalize(model.vision_proj(clip), dim=-1)
+
+    return clip
+
 def upload_video_long(model, video_path, vis_processor, clip_len=10):
     #if not isinstance(video_path, str) and not isinstance(video_path, bytes):
     #    raise NotImplementedError("Non-string or non-bytes video paths are not implemented.")
@@ -239,6 +261,11 @@ def get_all_video_embeddings(video_paths, model, vis_processor):
         embs = F.normalize(model.vision_proj(embs), dim=-1)
         video_embs.append(embs)
     return video_embs
+
+def get_all_video_embeddings_start_end(video_path, model, vis_processor, start_seconds, end_seconds):
+    clip_emb = upload_video_start_end(
+        model, video_path, vis_processor, start_seconds, end_seconds)
+    return clip_emb
 
 def get_all_video_embeddings_long_video(video_path, model, vis_processor, clip_len=10):
     clip_embs = upload_video_long(
