@@ -99,6 +99,8 @@ def disabled_train(self, mode=True):
 
 class LayerNorm(nn.LayerNorm):
     """Subclass torch's LayerNorm to handle fp16."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def forward(self, x: torch.Tensor):
         orig_type = x.dtype
