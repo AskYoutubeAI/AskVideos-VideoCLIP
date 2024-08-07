@@ -14,6 +14,8 @@ import einops
 from video_llama.models.Qformer import BertConfig, BertLMHeadModel
 import numpy as np
 
+DEVICE="cuda"#"mps"
+
 # from flamingo_pytorch import PerceiverResampler
 @registry.register_model("video_llama")
 class VideoLLAMA(Blip2Base):
@@ -121,9 +123,9 @@ class VideoLLAMA(Blip2Base):
 
         #  self.audio_hidden_size
     def vit_to_cpu(self):
-        self.ln_vision.to("cpu")
+        self.ln_vision.to(DEVICE)
         self.ln_vision.float()
-        self.visual_encoder.to("cpu")
+        self.visual_encoder.to(DEVICE)
         self.visual_encoder.float()
 
     def encode_videoQformer_visual(self, image, output_for_itm=False, output_for_itg=False):
@@ -134,6 +136,8 @@ class VideoLLAMA(Blip2Base):
         image = einops.rearrange(image, 'b c t h w -> (b t) c h w')
         with self.maybe_autocast():
             # embed image features with blip2, out: (b t) q h
+            if DEVICE != 'cuda':
+                self.vit_to_cpu()
             image_embeds = self.ln_vision(self.visual_encoder(image)).to(device)
             image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(device)
 

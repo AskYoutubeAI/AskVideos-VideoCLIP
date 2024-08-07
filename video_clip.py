@@ -1,6 +1,7 @@
 import os
 import glob
 import torch
+
 import time
 from torch.nn import functional as F
 from argparse import Namespace
@@ -11,14 +12,15 @@ from video_llama.common.registry import registry
 from video_llama.processors.video_processor import load_video, load_video_long, load_video_long_subset, load_video_start_end
 from video_llama.processors import Blip2ImageEvalProcessor
 
-DEVICE = 'cuda'
+#torch.set_default_device("mps")
+DEVICE = 'cuda'#'mps'
 
 def init(args):
     cfg = Config(args)
     model_config = cfg.model_cfg
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
-    model = model_cls.from_config(model_config).to(f'cuda:{args.gpu_id}')
+    model = model_cls.from_config(model_config).to(DEVICE)
     model.eval()
     vis_processor_cfg = cfg.datasets_cfg.webvid.vis_processor.train
     vis_processor = registry.get_processor_class(
@@ -36,8 +38,7 @@ def load_model(eval_config):
     model_config = cfg.model_cfg
     model_config.device_8bit = args.gpu_id
     model_cls = registry.get_model_class(model_config.arch)
-    model = model_cls.from_config(model_config).to(
-        'cuda:{}'.format(args.gpu_id))
+    model = model_cls.from_config(model_config).to(DEVICE)
     model.eval()
 
     vis_processor_cfg = cfg.datasets_cfg.webvid.vis_processor.train
@@ -317,7 +318,7 @@ def embed_text_itc(model, prompt):
             padding='max_length',
             truncation=True,
             max_length=320,
-            return_tensors='pt').to('cuda')
+            return_tensors='pt').to(DEVICE)
     embds = model.video_Qformer.bert(
             inputs.input_ids,
             inputs.attention_mask,
@@ -340,7 +341,7 @@ def embed_text_itg(model, prompt, past_key_values, query_tokens=None, video_atts
             padding='max_length',
             truncation=True,
             max_length=320,
-            return_tensors='pt').to('cuda')
+            return_tensors='pt').to(DEVICE)
 
     query_atts = torch.ones(query_tokens.size()[:-1], dtype=torch.long).to(query_tokens.device)
 
@@ -369,7 +370,7 @@ def embed_text_itm(model, prompt, video_emb, query_tokens=None, video_atts=None)
             padding='max_length',
             truncation=True,
             max_length=320,
-            return_tensors='pt').to('cuda')
+            return_tensors='pt').to(DEVICE)
 
     if query_tokens is None:
         query_tokens = model.video_query_tokens.expand(video_emb.shape[0], -1, -1)

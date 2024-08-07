@@ -48,6 +48,7 @@ from transformers.models.bert.configuration_bert import BertConfig
 
 logger = logging.get_logger(__name__)
 
+DEVICE = "cuda"# "mps"
 
 class BertEmbeddings(nn.Module):
     """Construct the embeddings from word and position embeddings."""
@@ -182,8 +183,10 @@ class BertSelfAttention(nn.Module):
         # and values come from an encoder; the attention mask needs to be
         # such that the encoder's padding tokens are not attended to.
         is_cross_attention = encoder_hidden_states is not None
-
         if is_cross_attention:
+            self.key.to(DEVICE)
+            self.value.to(DEVICE)
+            encoder_hidden_states.to(DEVICE)
             key_layer = self.transpose_for_scores(self.key(encoder_hidden_states))
             value_layer = self.transpose_for_scores(self.value(encoder_hidden_states))
             attention_mask = encoder_attention_mask
@@ -196,6 +199,8 @@ class BertSelfAttention(nn.Module):
             key_layer = self.transpose_for_scores(self.key(hidden_states))
             value_layer = self.transpose_for_scores(self.value(hidden_states))
 
+        hidden_states.to(DEVICE)
+        self.query.to(DEVICE)
         mixed_query_layer = self.query(hidden_states)
 
         query_layer = self.transpose_for_scores(mixed_query_layer)
@@ -871,7 +876,7 @@ class BertModel(BertPreTrainedModel):
             position_ids=position_ids,
             query_embeds=query_embeds,
             past_key_values_length=past_key_values_length,
-        )
+        ).to(DEVICE)
 
         input_shape = embedding_output.size()[:-1]
         batch_size, seq_length = input_shape
