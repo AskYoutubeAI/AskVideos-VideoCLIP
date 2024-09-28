@@ -1,0 +1,22 @@
+model:
+  arch: video_llama
+  model_type: pretrain_vicuna
+  ckpt: './models/askvideos_clip_v0.3.pth'
+  max_frame_pos: 32
+  clip_dim_size: 1024
+  num_videoq_hidden_layers: 4
+  #vit_model: 'clip_vit_L'
+
+datasets:
+  webvid:
+    vis_processor:
+      train:
+        name: "alpro_video_eval"
+        n_frms: 16
+        image_size: 224
+    text_processor:
+      train:
+        name: "blip_caption"
+
+run:
+  task: video_text_pretrain
