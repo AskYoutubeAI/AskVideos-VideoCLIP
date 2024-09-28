@@ -26,6 +26,7 @@
 |:------------|-------------|
 | AskVideos-VideoCLIP-v0.1    | [link](https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.1) |
 | AskVideos-VideoCLIP-v0.2    | [link](https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.2) |
+| AskVideos-VideoCLIP-v0.3    | [link](https://huggingface.co/AskYoutube/AskVideos-VideoCLIP-v0.3) |
 
 The demo is also available to run on colab.
 | Model       | Colab link |
